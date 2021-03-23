@@ -1,0 +1,11 @@
+{
+  "name": "vue",
+  "version": "1.0.0",
+  "description": "vue core simulate",
+  "main": "index.js",
+  "author": "andy",
+  "license": "MIT",
+  "dependencies": {
+    "acorn": "^8.1.0"
+  }
+}
