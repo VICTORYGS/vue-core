@@ -1,6 +1,9 @@
 # vue-core
 vue v-for v-modal {{xx}} 等核心功能实现
 
+## Demo
+https://victorygs.github.io/vue-core/index.html
+
 ## Usage
 
 ```js
@@ -68,8 +71,6 @@ vue v-for v-modal {{xx}} 等核心功能实现
     })
 </script>
 ```
-
-## Demo
 
 
 
