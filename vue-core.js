@@ -25,7 +25,7 @@ function reserved(obj) {
             currentHandle&&handleMap.get(p).push(currentHandle);
             // Array 方法的重写
             if(Array.isArray(target)){
-                const methodsOfArray=['push','shift','unshift','pop','splice']
+                const methodsOfArray=['push','shift','unshift','pop','splice','sort','reverse']
                 if(methodsOfArray.includes(p)){
                     return function(...args){
                         Array.prototype[p].apply(target,args)
