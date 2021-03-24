@@ -1,4 +1,4 @@
-import * as acorn from './node_modules/acorn/dist/acorn.mjs'
+import * as acorn from './acorn.mjs'
 function isObj(obj) {
     return Object.prototype.toString.call(obj).match(/Object|Array/)
 }
