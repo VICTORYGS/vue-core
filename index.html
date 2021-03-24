@@ -5,9 +5,22 @@
     <title>Title</title>
     <style>
         .fontBlue{color: blue}
+        *{
+            padding: 0;
+            margin:0;
+        }
+        .title{
+            background: #72cb75;
+            color: #fff;
+            text-align: center;
+        }
+        #app{
+            padding: 60px;
+        }
     </style>
 </head>
 <body>
+<h1 class="title">vue-core test</h1>
 <div id="app">
     <div>v-bind=><b v-bind="msg"><p>ss</p></b></div>
     v-model=>{{msg}}
