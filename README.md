@@ -1,5 +1,5 @@
 # vue-core
-vue v-for v-modal @event :attr v-bind {{}} v-directive :class="{a:b}" :style="{a:b}"功能实现
+vue v-for v-modal @event :attr v-bind {{}} v-directive :class="{a:b}" :style="{a:b}" v-if v-show功能实现
 
 ## Demo
 https://victorygs.github.io/vue-core/index.html
