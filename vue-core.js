@@ -121,7 +121,7 @@ export class Vue {
                         range.deleteContents()
                         range.insertNode(document.createTextNode(keyToVal(this,s.replace(/{|}/g, '').trim(),node)))
                     }
-                    exeHandler(1)
+                    exeHandler()
                 })
             }
         }
@@ -284,6 +284,7 @@ export class Vue {
                         reg:/^:([\S\s]+)/,
                         handle:(match)=>{
                             const expression=attr.value.trim()
+
                             let attrName=match[1]
                             switch (attrName) {
                                 case 'class':
@@ -298,6 +299,7 @@ export class Vue {
                                                     node.classList.remove(k)
                                                 }
                                             }
+                                            currentHandle()//需要立即执行
                                         })
                                     }catch (e) {
 
@@ -315,6 +317,7 @@ export class Vue {
                                                     node.style[k]=keyToVal(this,v.value.name,node)
                                                 }
                                             }
+                                            currentHandle()//需要立即执行
                                         })
                                     }catch (e) {
 
@@ -327,8 +330,8 @@ export class Vue {
                                             node.setAttribute(attrName,keyToVal(this,expression,node))
                                         }
                                     }
+                                    currentHandle=()=>{}
                             }
-                            currentHandle=()=>{}
                         }
                     }
                 ]
