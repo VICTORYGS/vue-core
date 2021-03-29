@@ -2,7 +2,42 @@ import * as acorn from './acorn.mjs'
 function isObj(obj) {
     return Object.prototype.toString.call(obj).match(/Object|Array/)
 }
-function reserved(obj) {
+const dataMaps = new WeakMap();//自动剔除失效handlers
+class nextTickQue {
+    constructor() {
+        this.que=[]
+        this.QueOfNextTick=new Set//nextTick自动去重
+        this.isActive=false
+    }
+    nextTick(fn){
+        this.QueOfNextTick.add(fn)
+    }
+    fnQueAdd(...fns){
+        this.que.push(...fns)
+        if(this.isActive)return;
+        //使用微任务 进行异步处理
+        Promise.resolve().then(this.consume.bind(this))
+        this.isActive=true
+    }
+    consume(){
+        let fn=this.que.shift()
+        while(fn){
+            fn()
+            fn=this.que.shift()
+        }
+        this.isActive=false
+        for (const fn of this.QueOfNextTick) {
+            fn()
+        }
+        this.QueOfNextTick.clear()//清空全部
+    }
+}
+function reserved(obj,isRootData) {
+    if(isRootData){
+        var nextTickIns=new nextTickQue
+        var nextTick=nextTickIns.nextTick.bind(nextTickIns);
+        var fnQueAdd=nextTickIns.fnQueAdd.bind(nextTickIns);
+    }
     let proxy = new Proxy(obj, {
         set(target, p, value, receiver) {
             if(isObj(target[p])){
@@ -10,12 +45,17 @@ function reserved(obj) {
                 dataMaps.set(value,dataMaps.get(target[p]))
             }
             target[p]=value
-            dataMaps.get(target).get(p).forEach(fn=>{
+            //多次更改 批量执行
+            fnQueAdd(...dataMaps.get(target).get(p))
+            /*dataMaps.get(target).get(p).forEach(fn=>{
                 fn()
-            })
+            })*/
             return true
         },
         get(target, p, receiver) {
+            if(isRootData&&p=='$nextTick'){
+                return nextTick
+            }
             let handleMap = dataMaps.get(target)
             if(!handleMap){
                 handleMap=new Map()
@@ -47,7 +87,7 @@ function reserved(obj) {
     })
     return proxy
 }
-const dataMaps = new WeakMap();//自动剔除失效handlers
+
 const keyToVal=(obj,key,node)=>{
     let res;
     const fromVFor=()=>{
@@ -76,12 +116,13 @@ const keyToVal=(obj,key,node)=>{
     return res
 };
 let currentHandle=null
+
 export class Vue {
     constructor(config) {
         let node = document.querySelector(config.el)
         const data=(typeof config.data) == 'function' ? config.data() : config.data;
-        this.data = reserved(data);
-        Object.keys(data).forEach(key=>{
+        this.data = reserved(data,true);
+        ['$nextTick'].concat(Object.keys(data)).forEach(key=>{
           Object.defineProperty(this,key,{
               get:()=>{
                   return this.data[key]
