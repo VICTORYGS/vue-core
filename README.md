@@ -1,5 +1,17 @@
 # vue-core
-vue v-for v-modal  :class="{a:b}" :style="{a:b}" v-if v-show @event v-directive :attr v-bind {{}} Array push等方法实现
+vue 功能模拟实现
+实现的点：
+v-if v-show 
+v-for
+v-modal  
+@event 
+v-bind {{}}
+v-directive
+:class="{a:b}" :style="{a:b}" :attr 
+$nextTick
+set时数据的异步批量更新
+Array push等方法重写
+
 
 ## Demo
 https://victorygs.github.io/vue-core/index.html
