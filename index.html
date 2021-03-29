@@ -32,8 +32,11 @@
     </div>
     v-if嵌套v-for:
     <div v-if="isShow">
-        <p v-for="i in arr">{{i}} <b>{{k.o}}</b>
-        </p></div>
+        <div v-for="i in arr">
+            <div :style="{color,backgroundColor:bgColor}">{{i}}</div>
+            <b>{{k.o}}</b>
+        </div>
+    </div>
     <button @click="toggle">show if control</button>
 
     <div>v-bind=><b v-bind="msg"><p>ss</p></b></div>
