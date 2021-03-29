@@ -1,16 +1,16 @@
 # vue-core
 vue 功能模拟实现
 实现的点：
-v-if v-show 
-v-for
-v-modal  
-@event 
-v-bind {{}}
-v-directive
-:class="{a:b}" :style="{a:b}" :attr 
-$nextTick
-set时数据的异步批量更新
-Array push等方法重写
+v-if v-show  
+v-for  
+v-modal
+@event  
+v-bind {{}}  
+v-directive  
+:class="{a:b}" :style="{a:b}" :attr  
+$nextTick  
+set时数据的异步批量更新  
+Array push等方法重写  
 
 
 ## Demo
