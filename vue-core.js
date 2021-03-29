@@ -99,8 +99,10 @@ export class Vue {
     traverse(node) {
         let isBreak=false;
         function exeHandler() {
-            currentHandle()
-            currentHandle=null//清除
+            if(currentHandle){
+                currentHandle()
+                currentHandle=null
+            }
         }
         const next=node=> {
             let {childNodes}=node||[]
@@ -305,6 +307,7 @@ export class Vue {
                                     }catch (e) {
 
                                     }
+                                    currentHandle=null
                                     break;
                                 case 'style':
                                     var ast = acorn.parse("(" + expression + ")");
@@ -323,6 +326,7 @@ export class Vue {
                                     }catch (e) {
 
                                     }
+                                    currentHandle=null
                                     break;
                                 default:
                                     attrName=attrName.trim()
