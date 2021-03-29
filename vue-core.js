@@ -103,8 +103,10 @@ export class Vue {
             currentHandle=null//清除
         }
         const next=node=> {
-            if (node.childNodes && node.childNodes.length) {//还有子集就交由子集处理
-                for (let n of node.childNodes) {
+            let {childNodes}=node||[]
+            childNodes=Array.from(childNodes)
+            if (childNodes.length) {//还有子集就交由子集处理
+                for (let n of childNodes) {
                     this.traverse(n)
                 }
             } else {
@@ -169,7 +171,7 @@ export class Vue {
                                                 }
                                             })
                                             let cloneNode=node.cloneNode(true)
-                                            cloneNode.removeAttribute(attr.name)
+                                            cloneNode.removeAttribute(attr.name)//剔除子集v-for
                                             cloneNode['vFor']=obj
                                             container.appendChild(cloneNode);
                                             this.traverse(cloneNode)
@@ -215,9 +217,8 @@ export class Vue {
                             range.setEndAfter(node)
                             currentHandle=()=>{
                                 if(keyToVal(this,attr.value.trim(),node)){
-                                    if(isInit){
-                                        range.insertNode(node)
-                                    }else{
+                                    range.insertNode(node)
+                                    if(!isInit){
                                         isInit=true;
                                         traverserChildren&&traverserChildren();//内部存在v-for且之前并未渲染
                                     }
