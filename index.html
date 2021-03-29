@@ -27,6 +27,10 @@
 <body>
 <h1 class="title">vue-core test</h1>
 <div id="app">
+    <div id="nextTick">
+        nextTick content:{{nextTickCount}}
+        <button @click="nextTickTest">nextTick test</button>
+    </div>
     <div>
         v-show=><b v-show="isShow">v-show is show</b>
     </div>
@@ -72,6 +76,7 @@
         el: '#app',
         data() {
             return {
+                nextTickCount:0,
                 k: {o: 7},
                 isShow: true,
                 isBlue: '',
@@ -85,6 +90,17 @@
             }
         },
         methods: {
+            nextTickTest(){
+                console.log(this.$nextTick)
+                alert('即将开始nextTick alert结果，接着累加4次')
+                this.$nextTick(()=>{
+                    alert(`已被更改的innerHTML:`+document.querySelector('#nextTick').innerHTML)
+                })
+                this.nextTickCount++
+                this.nextTickCount++
+                this.nextTickCount++
+                this.nextTickCount++
+            },
             toggle() {
                 this.isShow = !this.isShow
             },
