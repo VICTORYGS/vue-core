@@ -335,7 +335,6 @@ export class Vue {
                                             node.setAttribute(attrName,keyToVal(this,expression,node))
                                         }
                                     }
-                                    currentHandle=()=>{}
                             }
                         }
                     }
