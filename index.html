@@ -4,17 +4,22 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <style>
-        .fontBlue{color: blue}
-        *{
-            padding: 0;
-            margin:0;
+        .fontBlue {
+            color: blue
         }
-        .title{
+
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        .title {
             background: #72cb75;
             color: #fff;
             text-align: center;
         }
-        #app{
+
+        #app {
             padding: 60px;
         }
     </style>
@@ -22,6 +27,15 @@
 <body>
 <h1 class="title">vue-core test</h1>
 <div id="app">
+    <div>
+        v-show=><b v-show="isShow">v-show is show</b>
+    </div>
+    v-if嵌套v-for:
+    <div v-if="isShow">
+        <p v-for="i in arr">{{i}} <b>{{k.o}}</b>
+        </p></div>
+    <button @click="toggle">show if control</button>
+
     <div>v-bind=><b v-bind="msg"><p>ss</p></b></div>
     v-model=>{{msg}}
     <input type="text" v-model="msg" v-focus="1+5">
@@ -38,7 +52,7 @@
     <button @click="arrAdd">arrAdd</button>
     <button @click="arrReset">arrReset</button>
 
-    <p v-for="v in arr" >{{v}}</p>
+    <p v-for="v in arr">{{v}}</p>
     <button @click="arrPush">arr push</button>
     <button @click="arrVforRest">arr reset</button>
 
@@ -50,37 +64,43 @@
 </div>
 <script type="module">
     import {Vue} from './vue-core.js'
+
     new Vue({
         el: '#app',
         data() {
             return {
-                isBlue:'',
-                bgColor:'#828282',
-                color:'red',
+                k: {o: 7},
+                isShow: true,
+                isBlue: '',
+                bgColor: '#828282',
+                color: 'red',
                 msg: 'hi',
                 s: 'andy',
                 ss: {val: 0},
                 sss: [[0]],
-                arr:Object.keys(new Array(3).fill(null))
+                arr: Object.keys(new Array(3).fill(null))
             }
         },
         methods: {
-            classControl(){
-                this.isBlue=!this.isBlue
+            toggle() {
+                this.isShow = !this.isShow
             },
-            changeBgColor(){
-                if(this.bgColor=='#828282'){
-                    this.bgColor='#fff'
-                }else{
-                    this.bgColor='#828282'
+            classControl() {
+                this.isBlue = !this.isBlue
+            },
+            changeBgColor() {
+                if (this.bgColor == '#828282') {
+                    this.bgColor = '#fff'
+                } else {
+                    this.bgColor = '#828282'
                 }
             },
-            arrPush(){
+            arrPush() {
                 this.arr.push(this.arr.length)
             },
-            arrVforRest(){
-                this.arr=[0,1,2]
-                console.log(this,this.arr)
+            arrVforRest() {
+                this.arr = [0, 1, 2]
+                console.log(this, this.arr)
             },
             reset() {
                 this.ss = {val: 0}
@@ -98,7 +118,7 @@
             },
             arrReset() {
                 this.sss[0] = [0]
-            }
+            },
         },
         directives: {
             focus: {
@@ -108,7 +128,7 @@
                     el.focus()
                 }
             }
-        }
+        },
     })
 </script>
 </body>
