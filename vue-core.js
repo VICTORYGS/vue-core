@@ -10,7 +10,9 @@ function reserved(obj) {
                 dataMaps.set(value,dataMaps.get(target[p]))
             }
             target[p]=value
-            dataMaps.get(target).get(p).forEach(fn=>fn())
+            dataMaps.get(target).get(p).forEach(fn=>{
+                fn()
+            })
             return true
         },
         get(target, p, receiver) {
@@ -96,6 +98,19 @@ export class Vue {
     }
     traverse(node) {
         let isBreak=false;
+        function exeHandler() {
+            currentHandle()
+            currentHandle=null//清除
+        }
+        const next=node=> {
+            if (node.childNodes && node.childNodes.length) {//还有子集就交由子集处理
+                for (let n of node.childNodes) {
+                    this.traverse(n)
+                }
+            } else {
+                handleText()
+            }
+        }
         const handleText = () => {
             if (node.nodeType == Node.TEXT_NODE) {
                 node.textContent.replace(/{{[\S\s]*?}}/g,(s,index)=>{
@@ -106,33 +121,44 @@ export class Vue {
                         range.deleteContents()
                         range.insertNode(document.createTextNode(keyToVal(this,s.replace(/{|}/g, '').trim(),node)))
                     }
-                    currentHandle()
-                    currentHandle=null//清除
+                    exeHandler(1)
                 })
             }
         }
         if(node.attributes){
             let attrbutesSort=[]
+            let firstArr=[]
             for(let attr of node.attributes){//vFor to be first
                 if(attr.name=='v-for'){
-                    attrbutesSort.unshift(attr)
+                    firstArr.push(attr)
+                }else if(attr.name=='v-if'){
+                    firstArr.unshift(attr)
                 }else attrbutesSort.push(attr)
             }
-            for(let attr of attrbutesSort){
+            for(let attr of firstArr.concat(attrbutesSort)){
                 let oneRegHandles=[
                     {
                         reg:/v-for/,
                         handle:(match)=>{
-                            node.removeAttribute(attr.name)// 防止重复解析v-for
+                            // node.removeAttribute(attr.name)// 防止重复解析v-for
+                            let isInit=false
                             const expression=attr.value.trim()
                             let arr=expression.split(/ of | in /).map(v=>v.trim())
                             if(arr.length==2){
-                                let range=document.createRange()
-                                range.setStartAfter(node)
-                                range.setEndAfter(node)
-                                node.parentNode.removeChild(node)
+                                //v-if的特殊处理
                                 currentHandle=()=>{
-                                    let arrRes=keyToVal(this,arr[1])
+                                    const range=document.createRange();
+                                    let rangeStart=node,rangeEnd=node;
+                                    if(node.nextNode){
+                                        if(Array.isArray(node.nextNode)){
+                                            [rangeStart,rangeEnd]=node.nextNode
+                                        }else{
+                                            rangeStart=rangeEnd=node
+                                        }
+                                    }
+                                    range.setStartBefore(rangeStart)
+                                    range.setEndAfter(rangeEnd)
+                                    let arrRes=keyToVal(this,arr[1],node)
                                     if(Array.isArray(arrRes)){
                                         let container=document.createDocumentFragment()
                                         arrRes.forEach((v,i)=>{
@@ -143,23 +169,27 @@ export class Vue {
                                                 }
                                             })
                                             let cloneNode=node.cloneNode(true)
+                                            cloneNode.removeAttribute(attr.name)
                                             cloneNode['vFor']=obj
-                                            container.appendChild(cloneNode)
+                                            container.appendChild(cloneNode);
                                             this.traverse(cloneNode)
-
                                         })
+                                        let {firstChild,lastChild}=container
+                                        if(firstChild===lastChild){
+                                            node.nextNode=firstChild
+                                        }else{
+                                            node.nextNode=[firstChild,lastChild]
+                                        }
                                         // 清除原内容
                                         range.deleteContents()
                                         range.insertNode(container)
                                         container=null
-                                        isBreak=true
+                                        isBreak=true//结束子集遍历
+                                        isInit=true
                                     }else {
                                         throw new Error('v-for required Type is Array')
                                     }
                                 }
-                                currentHandle()
-                                currentHandle=null//清除
-
                             }
                         }
                     },
@@ -172,27 +202,64 @@ export class Vue {
                             typeof fn=='function'&&node.addEventListener(event,()=>{
                                 fn.call(this,node)
                             });
+                            currentHandle=()=>{}
+                        }
+                    },
+                    {
+                        reg:/^v-if$/,
+                        handle:(match)=>{
+                            let isInit=false
+                            let traverserChildren;
+                            let range=document.createRange()
+                            range.setStartBefore(node)
+                            range.setEndAfter(node)
+                            currentHandle=()=>{
+                                if(keyToVal(this,attr.value.trim(),node)){
+                                    if(isInit){
+                                        range.insertNode(node)
+                                    }else{
+                                        isInit=true;
+                                        traverserChildren&&traverserChildren();//内部存在v-for且之前并未渲染
+                                    }
+                                }else{
+                                    if(!isInit){//v-if 初始状态为false
+                                        traverserChildren=()=>{
+                                            next(node);
+                                            traverserChildren=null;
+                                        }
+                                    }
+                                    isBreak=true
+                                    range.deleteContents()
+                                }
+                            }
+                        }
+                    },
+                    {
+                        reg:/^v-show$/,
+                        handle:(match)=>{
+                            currentHandle=()=>{
+                                node.style.display=keyToVal(this,attr.value.trim(),node)?'':'none';
+                            }
                         }
                     },
                     {
                         reg:/^v-bind$/,
                         handle:(match)=>{
                             currentHandle=()=>{
-                                node.textContent=keyToVal(this,attr.value.trim());
+                                node.textContent=keyToVal(this,attr.value.trim(),node);
                             }
-                            currentHandle()
-                            currentHandle=null
                         }
                     },
                     {
-                        reg:/v-model/,
+                        reg:/^v-model$/,
                         handle:(match)=>{
                             node.value=this[attr.value.trim()]
                             node.addEventListener('input',()=>{this[attr.value.trim()]=node.value});
+                            currentHandle=()=>{}
                         }
                     },
                     {
-                        reg:/v-(\w+)/,
+                        reg:/^v-(\w+)/,
                         handle:(match)=>{
                             const name=match[1]
                             const {bind}=this.directives[name]
@@ -210,10 +277,11 @@ export class Vue {
                                 binding.value=value
                             }
                             bind.apply(this,[node,binding])
+                            currentHandle=()=>{}
                         }
                     },
                     {
-                        reg:/:([\S\s]+)/,
+                        reg:/^:([\S\s]+)/,
                         handle:(match)=>{
                             const expression=attr.value.trim()
                             let attrName=match[1]
@@ -224,14 +292,12 @@ export class Vue {
                                         ast.body[0].expression.properties.forEach(v=>{
                                             let k=v.key.name
                                             currentHandle=()=>{
-                                                if(keyToVal(this,v.value.name)){
+                                                if(keyToVal(this,v.value.name,node)){
                                                     node.classList.add(k)
                                                 }else{
                                                     node.classList.remove(k)
                                                 }
                                             }
-                                            currentHandle()
-                                            currentHandle=null
                                         })
                                     }catch (e) {
 
@@ -244,13 +310,11 @@ export class Vue {
                                             let k=v.key.name
                                             currentHandle=()=>{
                                                 if(/_/.test(k)){
-                                                    node.style.setProperty(k,keyToVal(this,v.value.name))
+                                                    node.style.setProperty(k,keyToVal(this,v.value.name,node))
                                                 }else{
-                                                    node.style[k]=keyToVal(this,v.value.name)
+                                                    node.style[k]=keyToVal(this,v.value.name,node)
                                                 }
                                             }
-                                            currentHandle()
-                                            currentHandle=null
                                         })
                                     }catch (e) {
 
@@ -262,10 +326,9 @@ export class Vue {
                                         currentHandle=()=>{
                                             node.setAttribute(attrName,keyToVal(this,expression,node))
                                         }
-                                        currentHandle()
-                                        currentHandle=null
                                     }
                             }
+                            currentHandle=()=>{}
                         }
                     }
                 ]
@@ -273,18 +336,13 @@ export class Vue {
                     let match=attr.name.match(v.reg);
                     if(match){
                         v.handle(match);
+                        exeHandler()
                     }
                     return match
                 })
             }
         }
-        if(isBreak){return}
-        if (node.childNodes && node.childNodes.length) {//还有子集就交由子集处理
-            for (let n of node.childNodes) {
-                this.traverse(n)
-            }
-        } else {
-            handleText()
-        }
+        if(!isBreak)next(node);
+
     }
 }
